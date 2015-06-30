@@ -12,6 +12,7 @@ var startY;
 
 var circle;
 var rect;
+var imageObj;
 
 var HEIGHT=500;
 var WIDTH=500;
@@ -21,11 +22,14 @@ var mouseY;
 
 var rectangles=[];
 var circles=[];
+var temp=["images/marley.jpg"];
+var wordImages=[];
 
 var numRect=3;
 var numCirc=3;
 
 var win=0;
+var runUpdate;
 function init(){
 
 	canvas = document.getElementById("canvas");
@@ -78,33 +82,42 @@ function init(){
 		circles.push(obj);
 		// console.log("rectangle length:"+ rectangles);
 	}
+	for(var i=0; i<3;i++){
+		var randNumX= Math.random()*WIDTH-10;
+		var randNumY= Math.random()*HEIGHT-10;
+		var obj= makeImageObj(i,randNumX,randNumY,50,50,temp[0],false,false);
+		wordImages.push(obj);
+		// console.log("rectangle length:"+ rectangles);
+	}
+
+	console.log(wordImages);
 	update();
 }
 
 function update(){
 	draw();
-
-	if(circles.every(winCond)){
+	console.log("1:"+wordImages[0].isCor + "2:"+wordImages[1].isCor + "3:"+wordImages[2].isCor)
+	if(wordImages.every(winCond)){
 		console.log("winning");
+		stop();
 	}
-	
-	// for(var i=0;i<numCirc;i++){
-	// 	if(!circles[i].isCor){
-	// 		return false;
-			
-	// 	}
-	// 	else{
-	// 		console.log("all true");
-	// 		return true;
-	// 	}
-	// }
-	// if(win==numRect){
-	// 	console.log("WIN GAME");
-	// }
-	window.requestAnimationFrame(update);
-	// console.log("updateing");
+	else{
+		runUpdate=window.requestAnimationFrame(update);
+	}
 }
 
+function start() {
+    if (!runUpdate) {
+       update();
+    }
+}
+
+function stop() {
+    if (runUpdate) {
+       window.cancelAnimationFrame(runUpdate);
+       runUpdate = undefined;
+    }
+}
 function winCond(value,index,ar){
 	if(value.isCor==true){
 		return true;
@@ -126,26 +139,46 @@ function draw() {
 		ctx.restore();
 	}
 
-	for(var i=0; i<circles.length;i++){
-		ctx.fillStyle= circles[i].c;
-		// ctx.fillStyle="orange";
-		ctx.beginPath();
-    	ctx.arc(circles[i].xPos, circles[i].yPos, circles[i].r, 0, Math.PI * 2);
-    	ctx.closePath();
-    	ctx.fill();
+	// for(var i=0; i<circles.length;i++){
+	// 	ctx.fillStyle= circles[i].c;
+	// 	// ctx.fillStyle="orange";
+	// 	ctx.beginPath();
+ //    	ctx.arc(circles[i].xPos, circles[i].yPos, circles[i].r, 0, Math.PI * 2);
+ //    	ctx.closePath();
+ //    	ctx.fill();
+	// }
+	for(var i=0; i<3;i++){
+		var wI=wordImages[i];
+		var p=new Image();
+		p.src=wI.img;
+
+		ctx.drawImage(p,wI.xPos,wI.yPos,wI.w,wI.h);
+		// console.log(wordImages[0].img);
+
 	}
+
 }
 
 // return true if the rectangle and circle are colliding
-function RectCircleColliding(circle, rect) {
+function RectCircleColliding(circle, rect,i) {
 
-    var distX = Math.abs(circle.xPos - rect.xPos - rect.w / 2);
-    var distY = Math.abs(circle.yPos - rect.yPos - rect.h / 2);
+    // var distX = Math.abs(circle.xPos - rect.xPos - rect.w / 2);
+    // var distY = Math.abs(circle.yPos - rect.yPos - rect.h / 2);
 
-    if (distX > (rect.w / 2 + circle.r)) {
+    var distX = Math.abs(i.xPos - rect.xPos - rect.w / 2);
+    var distY = Math.abs(i.yPos - rect.yPos - rect.h / 2);
+
+    // if (distX > (rect.w / 2 + circle.r)) {
+    //     return false;
+    // }
+    // if (distY > (rect.h / 2 + circle.r)) {
+    //     return false;
+    // }
+
+    if (distX > (rect.w / 2 + i.w)) {
         return false;
     }
-    if (distY > (rect.h / 2 + circle.r)) {
+    if (distY > (rect.h / 2 + i.w)) {
         return false;
     }
 
@@ -159,13 +192,21 @@ function RectCircleColliding(circle, rect) {
     var dx = distX - rect.w / 2;
     var dy = distY - rect.h / 2;
 
-    if(dx * dx + dy * dy <= (circle.r * circle.r)){
+    // if(dx * dx + dy * dy <= (circle.r * circle.r)){
+    // 	//console.log("rect is touching circle");
+
+    // 	return true;
+    // }
+    // else{
+    // 	// circle.c="green";
+    // }
+    if(dx * dx + dy * dy <= (i.w * i.h)){
     	//console.log("rect is touching circle");
 
     	return true;
     }
     else{
-    	circle.c="green";
+    	// circle.c="green";
     }
 }
 
@@ -175,12 +216,22 @@ function handleMouseDown(e) {
     startX = parseInt(e.clientX - offsetX);
     startY = parseInt(e.clientY - offsetY);
     isDown=true;
-	for(var i=0; i<circles.length;i++){
+	for(var i=0; i<3;i++){
 	    // Put your mousedown stuff here
-	    var dx = startX - circles[i].xPos;
-	    var dy = startY - circles[i].yPos;
-	    if(dx * dx + dy * dy < circles[i].r * circles[i].r){
-	    	circles[i].isDrag=true;
+	    // var dx = startX - circles[i].xPos;
+	    // var dy = startY - circles[i].yPos;
+
+	   	var wx = startX - wordImages[i].xPos;
+	    var wy = startY - wordImages[i].yPos;
+
+	    // if(dx * dx + dy * dy < circles[i].r * circles[i].r){
+	    // 	circles[i].isDrag=true;
+	    // 	//console.log*("circle is dragging");
+	    // }
+	    // console.log(wx * wx + wy * wy);
+	    // console.log(wordImages[0].w * wordImages.h);
+	    if(wx * wx + wy * wy < wordImages[i].w * wordImages[i].h){
+	    	wordImages[i].isDrag=true;
 	    	//console.log*("circle is dragging");
 	    }
 	}
@@ -190,10 +241,15 @@ function handleMouseDown(e) {
 function handleMouseUp(e) {
     e.preventDefault();
     isDown = false;
-    for(var i=0; i<circles.length;i++){
-    	circles[i].isDrag=false;
+    // for(var i=0; i<circles.length;i++){
+    // 	circles[i].isDrag=false;
+    // }
+    // for(var i=0; i<circles.length;i++){
+    // 	circles[i].isDrag=false;
+    // }
+    for(var i=0; i<3;i++){
+    	wordImages[i].isDrag=false;
     }
-
 }
 
 function handleMouseOut(e) {
@@ -214,20 +270,37 @@ function handleMouseMove(e) {
     startX = mouseX;
     startY = mouseY;
     for(var i=0; i<numCirc;i++){
-	    if(circles[i].isDrag){
+	 //    if(circles[i].isDrag){
 
-		    circles[i].xPos += dx;
-		    circles[i].yPos += dy;
+		//     circles[i].xPos += dx;
+		//     circles[i].yPos += dy;
+		// 	for(var j=0; j<numRect;j++){
+		// 		// console.log(RectCircleColliding(circles[i], rectangles[j]));
+		// 		if (RectCircleColliding(circles[i], rectangles[j],wordImages[i]) && conditionals(circles[i],rectangles[j],wordImages[i])){
+		// 	        // console.log("Rect name: "+ rectangles[j].n + ", circ name: "+ circles[i].n);
+
+		// 	        break;
+		// 		}
+		// 		else{
+		// 			circles[i].isCor=false;
+		// 			circles[i].c="purple";
+		// 		}
+		// 	}
+		// }
+		if(wordImages[i].isDrag){
+
+		    wordImages[i].xPos += dx;
+		    wordImages[i].yPos += dy;
 			for(var j=0; j<numRect;j++){
 				// console.log(RectCircleColliding(circles[i], rectangles[j]));
-				if (RectCircleColliding(circles[i], rectangles[j]) && conditionals(circles[i],rectangles[j])){
+				if (RectCircleColliding(circles[i], rectangles[j],wordImages[i]) && conditionals(circles[i],rectangles[j],wordImages[i])){
 			        // console.log("Rect name: "+ rectangles[j].n + ", circ name: "+ circles[i].n);
 
 			        break;
 				}
 				else{
-					circles[i].isCor=false;
-					circles[i].c="purple";
+					wordImages[i].isCor=false;
+					// circles[i].c="purple";
 				}
 			}
 		}
@@ -237,10 +310,23 @@ function handleMouseMove(e) {
     startX = mouseX;
     startY = mouseY;
 }
-function conditionals(a,b){
-	if(a.n==b.n){
-		a.c="skyblue";
-		a.isCor=true;
+function conditionals(a,b,c){
+	// if(a.n==b.n){
+	// 	a.c="skyblue";
+	// 	a.isCor=true;
+	// 	// console.log("yes");
+	// 	return true;
+	// }
+	// else if (a!=b){
+	// 	// a.c="red";
+	// 	// console.log("NO");
+	// 	return false;
+	// }
+
+	if(c.n==b.n){
+		b.c="skyblue";
+		// c.w=100;
+		c.isCor=true;
 		// console.log("yes");
 		return true;
 	}
@@ -262,6 +348,20 @@ function rectangle(name,x,y,width,height, color){
 
 	return rect;
     // ctx.fillRect(rect.xPos, rect.yPos, rect.w, rect.h);
+}
+
+function makeImageObj(name,x,y,width,height,image,isDragging,isCorrect){
+	imageObj={
+		n:name,
+		xPos:x,
+		yPos:y,
+		w:width,
+		h:height,
+		img:image,
+		isDrag:isDragging,
+		isCor:isCorrect
+	}
+	return imageObj;
 }
 
 function makeCircle(name,x,y,radius,color,isDragging,isCorrect){
