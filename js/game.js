@@ -24,6 +24,17 @@ var mouseY;
 
 // var doneBtn;
 var doneBtnImg;
+var playBtnImg;
+var continueBtnImg;
+var creditsBtnImg;
+var goBackMenuBtnImg;
+
+// game screens
+var showMenu=true;
+var showGame=false;
+var showCredits=false;
+var showInstructions=false;
+var showGameOver=false;
 
 //arrays
 var rectangles=[];
@@ -35,6 +46,8 @@ var numMatches=3;
 var gameIsOver=false;
 var runUpdate;
 
+var wordsStartingPosX=50;
+var wordsStartingPosY=200;
 //initialize function
 function init(){
 	//grab the canvas and set up context
@@ -52,19 +65,62 @@ function init(){
 	startX;
 	startY;
 
-	//inititalize buttons
-	// doneBtn=document.querySelector("#doneBtn");
-
-	// object for the done button
-	doneBtnImg={
-		xPos:100,
-		yPos:100,
-		w: 100,
-		h:50,
-		img:"images/RIT_tiger.jpg"
-	};
-
 	// event listeners
+
+	// create and event listener for the buttons
+	// so far it's only the done btn
+	document.addEventListener('click', function(e) {
+	        console.log('click: ' + e.offsetX + '/' + e.offsetY);
+	        // see if the click collides with the button
+	        if(showGame){
+	        	var donePressed = collides(doneBtnImg, e.offsetX, e.offsetY);
+	    	}
+	    	else if(showMenu){
+	    		var playPressed = collides(playBtnImg, e.offsetX, e.offsetY);
+	    		var creditsPressed = collides(creditsBtnImg, e.offsetX, e.offsetY);
+	    	}
+	        else if(showInstructions){
+	        	var continuePressed = collides(continueBtnImg, e.offsetX, e.offsetY);
+	    	}
+	        else if(showCredits || showGameOver){
+	        	var goBackPressed = collides(goBackMenuBtnImg, e.offsetX, e.offsetY);
+	    	}
+	        ///if it collides, check to see if the images match their respective squares
+	        // if they do, end the game. Else, keep going
+	        if(playPressed){
+	        	showInstructions=true;
+	        	showMenu=false;
+	        	console.log("play pressed");
+	        }
+	        if(creditsPressed){
+	        	showCredits=true;
+	        	showMenu=false;
+	        	console.log("credits pressed");
+	        }
+	        if(goBackPressed){
+	        	showMenu=true;
+	        	showCredits=false;
+	        	showGameOver=false;
+	        	gameIsOver=false;
+	        	console.log("goBackPressed");
+	        }
+	        if(continuePressed){
+	        	showGame=true;
+	        	showInstructions=false;
+	        	console.log("continue pressed");
+	        }
+
+	        if (donePressed) {
+	            if(wordImages.every(winCond)){
+					gameIsOver=true;
+					showGame=false;
+					showGameOver=true;
+				}
+	        } else {
+	            console.log('no collision');
+	        }
+	}, false);
+
 	$("#canvas").mousedown(function (e) {
     	handleMouseDown(e);
 	});
@@ -78,6 +134,10 @@ function init(){
 	    handleMouseOut(e);
 	});
 
+
+		//inititalize buttons
+		// doneBtn=document.querySelector("#doneBtn");
+
 	// create rectangle objects
 	for(var i=0; i<numMatches;i++){
 		var xPosition = 250*i;
@@ -90,30 +150,19 @@ function init(){
 		// var randNumX= Math.random()*WIDTH-10;
 		// var randNumY= Math.random()*HEIGHT-10;
 		var xPosition = 250*i;
-		var obj= makeImageObj(i,50+xPosition,200,50,50,temp[0],false,false);
+		var obj= makeImageObj(i,wordsStartingPosX+xPosition,wordsStartingPosY,50,50,temp[0],false,false);
 		wordImages.push(obj);
 		// console.log("rectangle length:"+ rectangles);
 	}
-
-	// create and event listener for the buttons
-	// so far it's only the done btn
-	document.addEventListener('click', function(e) {
-	        console.log('click: ' + e.offsetX + '/' + e.offsetY);
-	        // see if the click collides with the button
-	        var rect = collides(doneBtnImg, e.offsetX, e.offsetY);
-	        ///if it collides, check to see if the images match their respective squares
-	        // if they do, end the game. Else, keep going
-	        if (rect) {
-	            if(wordImages.every(winCond)){
-					gameIsOver=true;
-				}
-	        } else {
-	            console.log('no collision');
-	        }
-	}, false);
-
+	//make done button object
+	doneBtnImg=makeButton(100,100,100,50,"images/RIT_tiger.jpg");
+	playBtnImg=makeButton(100,300,100,50,"images/RIT_tiger.jpg");
+	creditsBtnImg=makeButton(100,500,100,50,"images/RIT_tiger.jpg");
+	continueBtnImg=makeButton(200,500,100,50,"images/RIT_tiger.jpg");
+	goBackMenuBtnImg=makeButton(400,500,100,50,"images/RIT_tiger.jpg");
 	// call the update function
 	update();
+
 }
 
 // update function
@@ -125,13 +174,20 @@ function update(){
 	// Else, continue checking the cnavas for any updates
 
 	//win condition
+	// if(gameIsOver ){
+	// 	console.log("game over");
+	// 	stop();
+	// }
+	// else{
+	// 	runUpdate=window.requestAnimationFrame(update);
+	// }
 	if(gameIsOver){
 		console.log("game over");
-		stop();
+		// resetGame();
+		// stop();
 	}
-	else{
-		runUpdate=window.requestAnimationFrame(update);
-	}
+	
+	runUpdate=window.requestAnimationFrame(update);
 }
 
 // function buttons(){
@@ -142,35 +198,88 @@ function update(){
 
 //draw function. Draws to the screen
 function draw() {
-	// first clear the canvas from the previous update
-	clear();
+	if(showMenu){
+		clear();
 
-	// draw the rectangles
-	for(var i=0; i<rectangles.length;i++){
-		ctx.save();
-		// ctx.fillStyle = "skyblue";
-		ctx.fillStyle=rectangles[i].c;
-		ctx.fillRect(rectangles[i].xPos, rectangles[i].yPos, rectangles[i].w, rectangles[i].h, rectangles[i].c);
-		ctx.restore();
+		var p= new Image();
+		p.src=playBtnImg.img;
+		ctx.drawImage(p,playBtnImg.xPos,playBtnImg.yPos,playBtnImg.w,playBtnImg.h);
+
+		var cr= new Image();
+		cr.src=creditsBtnImg.img;
+		ctx.drawImage(cr,creditsBtnImg.xPos,creditsBtnImg.yPos,creditsBtnImg.w,creditsBtnImg.h);
+
 	}
+	else if(showCredits){
+		clear();
 
-	//draw the buttons
-	var d= new Image();
-	d.src=doneBtnImg.img;
-	ctx.drawImage(d,doneBtnImg.xPos,doneBtnImg.yPos,doneBtnImg.w,doneBtnImg.h);
+		var g= new Image();
+		g.src=goBackMenuBtnImg.img;
+		ctx.drawImage(g,goBackMenuBtnImg.xPos,goBackMenuBtnImg.yPos,goBackMenuBtnImg.w,goBackMenuBtnImg.h);
+	}
+	else if(showInstructions){
+		clear();
 
-	// draw the draggable images
-	for(var i=0; i<wordImages.length;i++){
-		var wI=wordImages[i];
-		var p=new Image();
-		p.src=wI.img;
+		var c= new Image();
+		c.src=continueBtnImg.img;
+		ctx.drawImage(c,continueBtnImg.xPos,continueBtnImg.yPos,continueBtnImg.w,continueBtnImg.h);
 
-		ctx.drawImage(p,wI.xPos,wI.yPos,wI.w,wI.h);
+	}
+	else if(showGame){
+		// first clear the canvas from the previous update
+		clear();
+		console.log("showing game");
+
+		// draw the rectangles
+		for(var i=0; i<rectangles.length;i++){
+			ctx.save();
+			// ctx.fillStyle = "skyblue";
+			ctx.fillStyle=rectangles[i].c;
+			ctx.fillRect(rectangles[i].xPos, rectangles[i].yPos, rectangles[i].w, rectangles[i].h, rectangles[i].c);
+			ctx.restore();
+		}
+
+		//draw the buttons
+		var d= new Image();
+		d.src=doneBtnImg.img;
+		ctx.drawImage(d,doneBtnImg.xPos,doneBtnImg.yPos,doneBtnImg.w,doneBtnImg.h);
+
+		// draw the draggable images
+		for(var i=0; i<wordImages.length;i++){
+			var wI=wordImages[i];
+			var p=new Image();
+			p.src=wI.img;
+
+			ctx.drawImage(p,wI.xPos,wI.yPos,wI.w,wI.h);
+
+		}
+	}
+	else if(showGameOver){
+		clear();
+
+		var g= new Image();
+		g.src=goBackMenuBtnImg.img;
+		ctx.drawImage(g,goBackMenuBtnImg.xPos,goBackMenuBtnImg.yPos,goBackMenuBtnImg.w,goBackMenuBtnImg.h);
 
 	}
 
 }
-
+// // if reset, reset the positions of the words
+// function resetGame(){
+// 	if(gameIsOver){
+// 		// create image objects
+// 		for(var i=0; i<wordImages.length;i++){
+// 			// var randNumX= Math.random()*WIDTH-10;
+// 			// var randNumY= Math.random()*HEIGHT-10;
+// 			var w = wordImages[i];
+// 			var xPosition = 250*i;
+// 			console.log("changing word pos");
+// 			wordImages.posX= 100;
+// 			wordImages.posY = 100;
+// 			// con}ole.log("rectangle length:"+ rectangles);
+// 		}
+// 	}
+// }
 // return true if the rectangle and image are colliding
 function RectCircleColliding(rect,i) {
 
@@ -373,6 +482,17 @@ function makeImageObj(name,x,y,width,height,image,isDragging,isCorrect){
 		isCor:isCorrect
 	}
 	return imageObj;
+}
+
+function makeButton(x,y,width,height,image){
+	var button={
+			xPos:x,
+			yPos:y,
+			w:width,
+			h:height,
+			img:image
+		};
+	return button;
 }
 
 // makes circle objects (testing only)
