@@ -55,7 +55,7 @@ var gameBgImg;
 var buttonHeight=50;
 var buttonWidth=100;
 
-
+var timerStarted=false;
 
 var loadedMenuBgImg;
 var loadedPlayBtnImg;
@@ -65,6 +65,10 @@ var loadedContinueBtnImg;
 var loadedDoneBtnImg;
 
 var temp2=[];
+var timer;
+var timerTime=10;
+var interval;
+var winningTime;
 //initialize function
 function init(){
 	//grab the canvas and set up context
@@ -98,6 +102,7 @@ function init(){
 	    	}
 	        else if(showInstructions){
 	        	var continuePressed = collides(continueBtnImg, e.offsetX, e.offsetY);
+
 	    	}
 	        else if(showCredits || showGameOver){
 	        	var goBackPressed = collides(goBackMenuBtnImg, e.offsetX, e.offsetY);
@@ -124,6 +129,7 @@ function init(){
 	        if(continuePressed){
 	        	showGame=true;
 	        	showInstructions=false;
+	        	startTimer();
 	        	// console.log("continue pressed");
 	        }
 
@@ -132,6 +138,7 @@ function init(){
 					gameIsOver=true;
 					showGame=false;
 					showGameOver=true;
+					stopTimer(timer);
 				}
 	        } else {
 	            // console.log('no collision');
@@ -209,6 +216,15 @@ function init(){
 		wordImages.push(obj);
 		// console.log("rectangle length:"+ rectangles);
 	}
+
+	//timer
+	var halfW= WIDTH/2;
+    timer = document.querySelector('#timer');
+    $("#timer").hide();
+   	timer.style.position="absolute";
+   	timer.style.right=halfW+"px";
+   	timer.style.top=HEIGHT*(1/10)+"px";
+   	// timer.style.maxWidth=halfW+"px";
 
 
 	//make done button object
@@ -314,8 +330,12 @@ function draw() {
 		// first clear the canvas from the previous update
 		clear();
 
+		if(!timerStarted){
+			$("#timer").show();
+			startTimer(timerTime, timer);
+			timerStarted=true;
+		}
 		ctx.drawImage(loadedMenuBgImg,gameBgImg.xPos,gameBgImg.yPos,gameBgImg.w,gameBgImg.h);
-
 		// draw the rectangles
 		for(var i=0; i<rectangles.length;i++){
 			ctx.save();
@@ -345,6 +365,50 @@ function draw() {
 
 	}
 
+}
+//http://stackoverflow.com/questions/20618355/the-simplest-possible-javascript-countdown-timer
+function startTimer(duration, display) {
+    var start = Date.now(),
+        diff,
+        minutes,
+        seconds;
+    function timer() {
+        // get the number of seconds that have elapsed since 
+        // startTimer() was called
+        diff = duration - (((Date.now() - start) / 1000) | 0);
+
+        // does the same job as parseInt truncates the float
+        minutes = (diff / 60) | 0;
+        seconds = (diff % 60) | 0;
+
+        minutes = minutes < 10 ? "0" + minutes : minutes;
+        seconds = seconds < 10 ? "0" + seconds : seconds;
+
+        display.textContent = minutes + ":" + seconds; 
+
+        if (diff <= 0) {
+            // add one second so that the count down starts at the full duration
+            // example 05:00 not 04:59
+            start = Date.now() + 1000;
+        }
+        if(display.textContent=="00:00"){
+        	// gameIsOver=true;
+        	// showGameOver=true;
+        	// showGame=false;
+        	stopTimer(timer);
+        }
+    };
+    // we don't want to wait a full second before the timer starts
+    timer();
+    interval=setInterval(timer, 1000);
+}
+
+function stopTimer(display){
+	clearInterval(interval);
+	timerStarted=false;
+	winningTime=display.textContent;
+		//timer
+    $("#timer").hide();
 }
 // if reset, reset the positions of the words
 function resetGame(){
